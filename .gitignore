@@ -1,0 +1,4 @@
+/.vscode/*
+/db/*
+/node_modules/*
+/uploads/*
