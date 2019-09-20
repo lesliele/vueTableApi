@@ -52,7 +52,7 @@ router.get('/user', function(req, res, next) {
     let sortKey = sortFiled[0];
     let sortWay = sortFiled[1];
     let filter = (req.query.filter && String(req.query.filter)) || '';
-    let querySearch = filter ? Users.find({
+    let filterCondition = filter ? {
         $or: [{
                 line1: new RegExp(filter, 'gmi')
             },
@@ -66,8 +66,8 @@ router.get('/user', function(req, res, next) {
                 name: new RegExp(filter, 'gmi')
             }
         ]
-    }): Users.find();
-    querySearch.sort({
+    } : {};
+    Users.find(filterCondition).sort({
             [sortKey]: sortWay
         }).limit(pageSize).skip(skipNum).exec(function (err, adventure) {
         if (err) {
@@ -91,13 +91,21 @@ router.get('/user', function(req, res, next) {
                     userImg: item.userImg
                 });
             });
-            Users.countDocuments().exec(function (err, number) {
+            let curLen = adventure.length;
+            Users.count(filterCondition).exec(function (err, number) {
                 if (err) {
                     handleResponse(0, '系统错误');
                 } else {
                     rs = {
                         data: formatData,
-                        total: number
+                        total: number,
+                        pageSize: pageSize,
+                        from: 1,
+                        to: curLen,
+                        curIndex: pageIndex,
+                        lastPage: Math.ceil(number / pageSize),
+                        hasPrevPage: pageIndex - 1 > 0,
+                        hasNextPage: pageIndex * pageSize < number
                     }
                     res.json(rs);
                 }
